@@ -4,7 +4,6 @@ from typing import List
 
 from . import schemas, models,service
 from .database import engine, get_db
-from . import crud
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -18,30 +17,20 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 def get_all_user_records(db: Session = Depends(get_db)):
     return service.get_all_users_service(db=db)
 
-@app.get("/user/{email}", response_model=schemas.UserResponse)
+@app.get("/user/email/{email}", response_model=schemas.UserResponse)
 def get_user_by_email(email: str, db: Session = Depends(get_db)):
-    user = service.get_user_by_email_service(db, email=email)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return service.get_user_by_email_service(db=db, email=email)
+
 
 @app.get("/user/id/{id}", response_model=schemas.UserResponse)
 def get_user_by_id(id: int, db: Session = Depends(get_db)):
-    user = service.get_user_by_id_service(db, user_id=id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return service.get_user_by_id_service(db, user_id=id)
 
 @app.put("/user/id/{id}", response_model=schemas.UserResponse)
 def update_user(id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
-    updated_user = service.update_user_service(db=db, user_id=id, user_update=user_update)
-    if not updated_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return updated_user
+    return service.update_user_service(db=db, user_id=id, user_update=user_update)
+
 
 @app.delete("/user/id/{id}", response_model=schemas.UserResponse)
 def delete_user(id: int, db: Session = Depends(get_db)):
-    deleted_user = service.delete_user_service(db=db, user_id=id)
-    if not deleted_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return deleted_user
+    return service.delete_user_service(db=db, user_id=id)
