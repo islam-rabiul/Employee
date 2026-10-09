@@ -48,3 +48,14 @@ def delete_user_service(db: Session, user_id: int):
     if not deleted_user:
         raise HTTPException(status_code=404, detail="User not found")
     return deleted_user
+import time
+import logging
+
+# Set up logging to watch background output in the terminal
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def write_audit_log(action: str, email: str):
+    """Simulates a lightweight background job (e.g., logging or sending notifications)."""
+    time.sleep(2)
+    logger.info(f"--- BACKGROUND AUDIT LOG --- Action: {action} | User Email: {email}")

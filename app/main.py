@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -9,9 +9,37 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="User API", version="1.0")
 
+#
+# @app.post("/user/", response_model=schemas.UserResponse)
+# def create_user(user: schemas.UserCreate,background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+#     new_user = service.create_user_service(db=db, user=user)
+#
+#     background_tasks.add_task(
+#         service.write_audit_log,
+#         action="USER_CREATED",
+#         email=new_user.email
+#     )
+#
+#     return new_user
+
+
+from app.queue import task_queue
+from app.tasks import generate_user_report
+
+
 @app.post("/user/", response_model=schemas.UserResponse)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    return service.create_user_service(db=db, user=user)
+def create_user(
+        user: schemas.UserCreate,
+        db: Session = Depends(get_db)
+):
+    new_user = service.create_user_service(db=db, user=user)
+
+    task_queue.enqueue(
+        generate_user_report,
+        user_email=new_user.email
+    )
+
+    return new_user
 
 @app.get("/user/", response_model=List[schemas.UserResponse])
 def get_all_user_records(db: Session = Depends(get_db)):
