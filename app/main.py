@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, BackgroundTasks
+from fastapi import FastAPI, Depends, BackgroundTasks,Query
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -62,3 +62,12 @@ def update_user(id: int, user_update: schemas.UserUpdate, db: Session = Depends(
 @app.delete("/user/id/{id}", response_model=schemas.UserResponse)
 def delete_user(id: int, db: Session = Depends(get_db)):
     return service.delete_user_service(db=db, user_id=id)
+@app.get("/users/filter", response_model=List[schemas.UserResponse])
+def list_users(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    search: str | None = None,
+    domain: str | None = None,
+    db: Session = Depends(get_db)
+):
+    return service.get_users_service(db=db, skip=skip, limit=limit, search=search, domain=domain)

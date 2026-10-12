@@ -81,3 +81,17 @@ def delete_user_from_db(db: Session, user_id: int):
     db.delete(db_user)
     db.commit()
     return db_user
+def get_users_from_db(db: Session, skip: int, limit: int, search: str | None, domain: str | None):
+    query_str = "SELECT id, name, email, date, domain FROM users WHERE 1=1"
+    params = {"skip": skip, "limit": limit}
+
+    if domain:
+        query_str += " AND domain = :domain"
+        params["domain"] = domain
+
+    if search:
+        query_str += " AND (name LIKE :search OR email LIKE :search)"
+        params["search"] = f"%{search}%"
+
+    query_str += " ORDER BY id DESC LIMIT :limit OFFSET :skip;"
+    return db.execute(text(query_str), params).fetchall()
