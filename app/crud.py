@@ -3,18 +3,21 @@ from sqlalchemy import text
 from . import schemas
 from . import models
 
+
 def create_user_in_db(db: Session, User: schemas.UserCreate):
     query = text("""
-        INSERT INTO users(name, email, date, password,domain)
-        VALUES (:name,:email, :date,:password, :domain)
-        RETURNING id,name, email, date, password,domain;
-    """)
+                 INSERT INTO users(name, email, date, password, domain)
+                 VALUES (:name, :email, :date, :password, :domain) RETURNING id, name, email, date, password, domain;
+                 """)
 
     result = db.execute(query, User.model_dump())
 
+    # FIX: Fetch the row BEFORE committing the transaction
+    new_user = result.fetchone()
+
     db.commit()
 
-    return result.fetchone()
+    return new_user
 
 
 def get_all_user_from_db(db: Session):
@@ -37,20 +40,17 @@ def get_user_by_id(db: Session, id: int):
 
 
 def update_user_in_db(db: Session, user_id: int, user_update: schemas.UserUpdate):
-    # 1. Extract only the fields explicitly provided by the user
     update_data = user_update.model_dump(exclude_unset=True)
 
-    # If no fields were provided to update, just fetch and return the existing user
     if not update_data:
         check_query = text("SELECT * FROM users WHERE id = :user_id;")
         return db.execute(check_query, {"user_id": user_id}).first()
 
-    # 2. Dynamically build the SET clause for the SQL query based on what was passed
     set_clauses = []
     params = {"user_id": user_id}
 
     for key, value in update_data.items():
-        if value is not None:  # Safety check so nulls don't wipe data
+        if value is not None:
             set_clauses.append(f"{key} = :{key}")
             params[key] = value
 
@@ -66,9 +66,12 @@ def update_user_in_db(db: Session, user_id: int, user_update: schemas.UserUpdate
     """)
 
     result = db.execute(query, params)
+
+    # FIX: Fetch the updated row BEFORE committing the transaction
+    updated_user = result.fetchone()
+
     db.commit()
 
-    updated_user = result.fetchone()
     return updated_user
 
 def delete_user_from_db(db: Session, user_id: int):

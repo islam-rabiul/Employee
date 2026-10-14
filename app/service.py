@@ -57,6 +57,10 @@ def delete_user_service(db: Session, user_id: int):
     if not deleted_user:
         raise HTTPException(status_code=404, detail="User not found")
     return deleted_user
+
+def get_users_service(db: Session, skip: int, limit: int, search: str | None, domain: str | None):
+    return crud.get_users_from_db(db=db, skip=skip, limit=limit, search=search, domain=domain)
+
 import time
 import logging
 
@@ -70,5 +74,3 @@ def write_audit_log(action: str, email: str):
     logger.info(f"--- BACKGROUND AUDIT LOG --- Action: {action} | User Email: {email}")
 # ... (keep your existing service functions above) ...
 
-def get_users_service(db: Session, skip: int, limit: int, search: str | None, domain: str | None):
-    return crud.get_users_from_db(db=db, skip=skip, limit=limit, search=search, domain=domain)

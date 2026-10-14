@@ -1,8 +1,12 @@
+import os
 from redis import Redis
 from rq import Queue
 
-# Connect to Redis running locally
-redis_conn = Redis(host="localhost", port=6379)
+# Get the Redis URL from environment variables, defaulting to the Docker service hostname
+redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
-# Create an RQ queue named 'default'
+# Connect to Redis
+redis_conn = Redis.from_url(redis_url)
+
+# Initialize the RQ Queue
 task_queue = Queue("default", connection=redis_conn)

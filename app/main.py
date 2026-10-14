@@ -33,11 +33,13 @@ def create_user(
         db: Session = Depends(get_db)
 ):
     new_user = service.create_user_service(db=db, user=user)
-
-    task_queue.enqueue(
-        generate_user_report,
-        user_email=new_user.email
-    )
+    try:
+        task_queue.enqueue(
+            generate_user_report,
+            user_email=new_user.email
+        )
+    except Exception as e:
+        print(f"Redis queue warning: {e}")
 
     return new_user
 

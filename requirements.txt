@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+redis
+rq
+pydantic
+email-validator
+pydantic-settings
+psycopg2-binary
